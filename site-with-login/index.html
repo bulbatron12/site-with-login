@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нержавеющие гениталии</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="nazvanie">Нержавеющие гениталии</div>
+
+        <nav class="knopki">
+            <a href>Главная</a>
+            <a href>Мужчины</a>
+            <a href>Женщины</a>
+            <a href>Технологии</a>
+            <a href>Магазин</a>
+            <a href="#" onclick="otkrytAvtorizaciyu(); return false;" id="profil-btn">Профиль</a>
+
+            <form class="search">
+                <input type="search" placeholder="Поиск">
+                <button type="submit">Найти</button>
+            </form>
+        </nav>
+        <div class="musor" onclick="window.location.href='korzina.html'">
+            <img class="musor-img" src="korzina.webp" alt="musor">
+            <span class="schetchik" id="cart-count">0</span>
+        </div>
+    </header>
+
+    <div class="tovari" id="tovari-container">
+        <p style="padding: 20px;">Загрузка товаров...</p>
+    </div>
+
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-box">
+        <button class="auth-close" onclick="zakrytAvtorizaciyu()">×</button>
+        <h2 id="auth-zagolovok">Вход в профиль</h2>
+        <form id="auth-form">
+            <label for="auth-login">Логин</label>
+            <input id="auth-login" type="text" required minlength="3" placeholder="Введите логин">
+            <label for="auth-password">Пароль</label>
+            <input id="auth-password" type="password" required minlength="4" placeholder="Введите пароль">
+            <button type="submit">Войти</button>
+        </form>
+        <button class="btn-reg-modal" onclick="registraciya()">Зарегистрироваться</button>
+        <p class="auth-note">Если уже есть аккаунт — войди. Нет — зарегистрируйся.</p>
+        <p id="auth-message"></p>
+        <button id="logout-button" class="auth-logout" onclick="vyjti()" style="display:none;">Выйти</button>
+    </div>
+</div>
+
+<script>
+const API = 'http://localhost:3001';
+
+// ── АВТОРИЗАЦИЯ ──────────────────────────────────────
+
+function otkrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "flex";
+    obnovitProfil();
+}
+function zakrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "none";
+}
+function obnovitProfil() {
+    var login = localStorage.getItem("site-login");
+    if (login) {
+        document.getElementById("auth-zagolovok").textContent = "Привет, " + login + "!";
+        document.getElementById("auth-message").textContent = "";
+        document.getElementById("auth-form").style.display = "none";
+        document.getElementById("logout-button").style.display = "block";
+        document.getElementById("profil-btn").textContent = login;
+    } else {
+        document.getElementById("auth-zagolovok").textContent = "Вход в профиль";
+        document.getElementById("auth-form").style.display = "block";
+        document.getElementById("logout-button").style.display = "none";
+    }
+}
+document.getElementById("auth-modal").addEventListener("click", function(event) {
+    if (event.target === this) zakrytAvtorizaciyu();
+});
+document.getElementById("auth-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var login = document.getElementById("auth-login").value.trim();
+    var password = document.getElementById("auth-password").value;
+
+    fetch(API + '/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: login, password: password })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.error) {
+            document.getElementById("auth-message").textContent = data.error;
+        } else {
+            localStorage.setItem("site-login", data.username);
+            obnovitProfil();
+        }
+    })
+    .catch(function() {
+        document.getElementById("auth-message").textContent = "Сервер в какащке";
+        document.getElementById("auth-message").style.color = "#7B3F00";
+    });
+});
+function registraciya() {
+    var login = document.getElementById("auth-login").value.trim();
+    var password = document.getElementById("auth-password").value;
+    if (!login || !password) {
+        document.getElementById("auth-message").textContent = "Заполни логин и пароль";
+        return;
+    }
+    fetch(API + '/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: login, password: password })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        document.getElementById("auth-message").textContent = data.error || data.message;
+    })
+    .catch(function() {
+        document.getElementById("auth-message").textContent = "Сервер в какащке";
+        document.getElementById("auth-message").style.color = "#7B3F00";
+    });
+}
+function vyjti() {
+    localStorage.removeItem("site-login");
+    document.getElementById("profil-btn").textContent = "Профиль";
+    obnovitProfil();
+}
+
+// ── ТОВАРЫ ───────────────────────────────────────────
+
+async function loadProducts() {
+    try {
+        const res = await fetch(API + '/api/products');
+        const products = await res.json();
+
+        const container = document.getElementById('tovari-container');
+        container.innerHTML = '';
+
+        products.forEach((product, index) => {
+            const div = document.createElement('div');
+            div.className = 'tovar_' + (index + 1);
+            div.innerHTML = `
+                <img class="tovar_img" src="${product.image}" alt="${product.name}">
+                <h1 class="nazv_tovar">${product.name}</h1>
+                <p class="opisanie">${product.description}</p>
+                <p class="price">${Number(product.price).toLocaleString('ru-RU')} ₽</p>
+                <button onclick="dobavit(${product.id})">Купить товар</button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        document.getElementById('tovari-container').innerHTML =
+            '<p style="padding:20px; color:#7B3F00;">Сервер в какащке</p>';
+    }
+}
+
+async function updateCartCount() {
+    try {
+        const res = await fetch(API + '/api/cart');
+        const items = await res.json();
+        document.getElementById('cart-count').innerHTML = items.length;
+    } catch (e) {}
+}
+
+async function dobavit(product_id) {
+    try {
+        await fetch(API + '/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: product_id })
+        });
+        updateCartCount();
+        alert('Товар добавлен в корзину!');
+    } catch (e) {
+        alert('Ошибка: сервер не запущен');
+    }
+}
+
+loadProducts();
+updateCartCount();
+
+var user = localStorage.getItem('site-login');
+if (user) {
+    document.getElementById('profil-btn').textContent = user;
+}
+</script>
+
+</body>
+</html>

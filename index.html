@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нержавеющие гениталии</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="nazvanie">Нержавеющие гениталии</div>
+
+        <nav class="knopki">
+            <a href>Главная</a>
+            <a href>Мужчины</a>
+            <a href>Женщины</a>
+            <a href>Технологии</a>
+            <a href>Магазин</a>
+            <a href="#" onclick="otkrytAvtorizaciyu(); return false;">Профиль</a>
+
+            <form class="search">
+                <input type="search" placeholder="Поиск">
+                <button type="submit">Найти</button>
+            </form>
+        </nav>
+        <div class="musor" onclick="window.location.href='korzina.html'">
+            <img class="musor-img" src="korzina.webp" alt="musor">
+            <span class="schetchik" id="cart-count">0</span>
+        </div>
+    </header>
+
+    <div class="tovari">
+    <div class="tovar_1">
+            <img class="tovar_img" src="myjik.webp" alt="tovar_1">
+                <h1 class="nazv_tovar">Мужчина</h1>
+                <p class="opisanie">Тот самый мужчина, в котором ты нуждаешься</p>
+                <p class="price">15 000 ₽</p>
+                <button onclick="dobavit('Мужчина', 1500)">Купить товар</button>
+            </div>
+
+            <div class="tovar_2">
+                <img class="tovar_img" src="jenchina.webp" alt="tovar_2">
+                <h1 class="nazv_tovar">Женщина</h1>
+                <p class="opisanie">Женщина, которая справится  с чем угодно</p>
+                <p class="price">20 000 ₽</p>
+                <button onclick="dobavit('Женщина', 2000)">Купить товар</button>
+            </div>
+
+            <div class="tovar_3">
+                <img class="tovar_img" src="kostym.png" alt="tovar_3">
+                <h1 class="nazv_tovar">Костюм</h1>
+                <p class="opisanie">Костюм для тех, кому нужен комфорт</p>
+                <p class="price">22 500 ₽</p>
+                <button onclick="dobavit('Костюм', 2500)">Купить товар</button>
+            </div>
+        </div>
+
+
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-box">
+        <button class="auth-close" onclick="zakrytAvtorizaciyu()">×</button>
+        <h2>Вход в профиль</h2>
+        <form id="auth-form">
+            <label for="auth-login">Логин</label>
+            <input id="auth-login" type="text" required minlength="3" placeholder="Введите логин">
+            <label for="auth-password">Пароль</label>
+            <input id="auth-password" type="password" required minlength="4" placeholder="Введите пароль">
+            <button type="submit">Войти</button>
+        </form>
+        <p class="auth-note">Если логин новый, аккаунт будет создан автоматически.</p>
+        <p id="auth-message"></p>
+        <button id="logout-button" class="auth-logout" onclick="vyjti()" style="display:none;">Выйти</button>
+    </div>
+</div>
+
+<script>
+function otkrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "flex";
+    obnovitProfil();
+}
+function zakrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "none";
+}
+function obnovitProfil() {
+    var login = localStorage.getItem("site-login");
+    document.getElementById("auth-message").textContent = login ? "Вы вошли как " + login : "";
+    document.getElementById("logout-button").style.display = login ? "block" : "none";
+}
+document.getElementById("auth-modal").addEventListener("click", function(event) {
+    if (event.target === this) zakrytAvtorizaciyu();
+});
+document.getElementById("auth-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var login = document.getElementById("auth-login").value.trim();
+    var password = document.getElementById("auth-password").value;
+    var users = JSON.parse(localStorage.getItem("site-users") || "{}");
+
+    if (users[login] && users[login] !== password) {
+        document.getElementById("auth-message").textContent = "Неверный пароль.";
+        return;
+    }
+    if (!users[login]) {
+        users[login] = password;
+        localStorage.setItem("site-users", JSON.stringify(users));
+    }
+    localStorage.setItem("site-login", login);
+    document.getElementById("auth-message").textContent = "Вы вошли как " + login + ".";
+    document.getElementById("logout-button").style.display = "block";
+});
+function vyjti() {
+    localStorage.removeItem("site-login");
+    document.getElementById("auth-message").textContent = "Вы вышли из аккаунта.";
+    document.getElementById("logout-button").style.display = "none";
+}
+</script>
+
+<script>
+var korzina = [];
+
+if (localStorage.getItem("korzina")) {
+    korzina = JSON.parse(localStorage.getItem("korzina"));
+}
+
+document.getElementById("cart-count").innerHTML = korzina.length;
+
+function dobavit(nazvanie, tsena) {
+    korzina.push({ nazvanie: nazvanie, tsena: tsena });
+
+    localStorage.setItem("korzina", JSON.stringify(korzina));
+
+    document.getElementById("cart-count").innerHTML = korzina.length;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="nazvanie">Нержавеющие гениталии</div>
+
+        <nav class="knopki">
+            <a href="index.html">Главная</a>
+            <a href>Женщины</a>
+            <a href>Мужчины</a>
+            <a href>О нас</a>
+            <a href>Технологии</a>
+            <a href>Магазин</a>
+            <a href="#">Профиль</a>
+
+            <form class="search">
+                <input type="search" placeholder="Поиск">
+                <button type="submit">Найти</button>
+            </form>
+        </nav>
+        <div class="musor" onclick="window.location.href='korzina.html'">
+            <img class="musor-img" src="korzina.png" alt="musor">
+            <span class="schetchik" id="cart-count">0</span>
+        </div>
+    </header>
+
+    <div class="korzina-stranica">
+        <h2>Моя корзина</h2>
+
+        <div id="spisok-korziny"></div>
+
+        <p class="itogo"><b>Итого: <span id="summa">0</span> ₽</b></p>
+
+        <button class="ochist-btn" onclick="ochistit()">Очистить корзину</button>
+        <button class="nazad-btn" onclick="window.location.href='index.html'">← Вернуться в магазин</button>
+    </div>
+
+<script>
+const API = 'http://localhost:3001';
+
+async function pokazat() {
+    try {
+        const res = await fetch(API + '/api/cart');
+        const items = await res.json();
+
+        let summa = 0;
+        let text = '';
+
+        if (items.length === 0) {
+            text = '<p>Корзина пуста</p>';
+        } else {
+            items.forEach(item => {
+                text += `<div class='item'>
+                    <span>${item.name} — ${Number(item.price).toLocaleString('ru-RU')} ₽</span>
+                    <button onclick='udalit(${item.id})'>✕</button>
+                </div>`;
+                summa += Number(item.price);
+            });
+        }
+
+        document.getElementById('spisok-korziny').innerHTML = text;
+        document.getElementById('summa').innerHTML = summa.toLocaleString('ru-RU');
+        document.getElementById('cart-count').innerHTML = items.length;
+
+    } catch (e) {
+        document.getElementById('spisok-korziny').innerHTML =
+            '<p style="color:#7B3F00;">Сервер в какащке</p>';
+    }
+}
+
+async function udalit(id) {
+    await fetch(API + '/api/cart/' + id, { method: 'DELETE' });
+    pokazat();
+}
+
+async function ochistit() {
+    await fetch(API + '/api/cart', { method: 'DELETE' });
+    pokazat();
+}
+
+pokazat();
+</script>
+
+</body>
+</html>

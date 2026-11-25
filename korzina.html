@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="nazvanie">Нержавеющие гениталии</div>
+
+        <nav class="knopki">
+            <a href="index.html">Главная</a>
+            <a href>Женщины</a>
+            <a href>Мужчины</a>
+            <a href>О нас</a>
+            <a href>Технологии</a>
+            <a href>Магазин</a>
+            <a href="#" onclick="otkrytAvtorizaciyu(); return false;">Профиль</a>
+
+            <form class="search">
+                <input type="search" placeholder="Поиск">
+                <button type="submit">Найти</button>
+            </form>
+        </nav>
+        <div class="musor" onclick="window.location.href='korzina.html'">
+            <img class="musor-img" src="korzina.png" alt="musor">
+            <span class="schetchik" id="cart-count">0</span>
+        </div>
+    </header>
+
+    <div class="korzina-stranica">
+        <h2>Моя корзина</h2>
+
+        <div id="spisok-korziny"></div>
+
+        <p class="itogo"><b>Итого: <span id="summa">0</span> ₽</b></p>
+
+        <button class="ochist-btn" onclick="ochistit()">Очистить корзину</button>
+        <button class="nazad-btn" onclick="window.location.href='index.html'">← Вернуться в магазин</button>
+    </div>
+
+
+<div class="auth-modal" id="auth-modal">
+    <div class="auth-box">
+        <button class="auth-close" onclick="zakrytAvtorizaciyu()">×</button>
+        <h2>Вход в профиль</h2>
+        <form id="auth-form">
+            <label for="auth-login">Логин</label>
+            <input id="auth-login" type="text" required minlength="3" placeholder="Введите логин">
+            <label for="auth-password">Пароль</label>
+            <input id="auth-password" type="password" required minlength="4" placeholder="Введите пароль">
+            <button type="submit">Войти</button>
+        </form>
+        <p class="auth-note">Если логин новый, аккаунт будет создан автоматически.</p>
+        <p id="auth-message"></p>
+        <button id="logout-button" class="auth-logout" onclick="vyjti()" style="display:none;">Выйти</button>
+    </div>
+</div>
+
+<script>
+function otkrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "flex";
+    obnovitProfil();
+}
+function zakrytAvtorizaciyu() {
+    document.getElementById("auth-modal").style.display = "none";
+}
+function obnovitProfil() {
+    var login = localStorage.getItem("site-login");
+    document.getElementById("auth-message").textContent = login ? "Вы вошли как " + login : "";
+    document.getElementById("logout-button").style.display = login ? "block" : "none";
+}
+document.getElementById("auth-modal").addEventListener("click", function(event) {
+    if (event.target === this) zakrytAvtorizaciyu();
+});
+document.getElementById("auth-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    var login = document.getElementById("auth-login").value.trim();
+    var password = document.getElementById("auth-password").value;
+    var users = JSON.parse(localStorage.getItem("site-users") || "{}");
+
+    if (users[login] && users[login] !== password) {
+        document.getElementById("auth-message").textContent = "Неверный пароль.";
+        return;
+    }
+    if (!users[login]) {
+        users[login] = password;
+        localStorage.setItem("site-users", JSON.stringify(users));
+    }
+    localStorage.setItem("site-login", login);
+    document.getElementById("auth-message").textContent = "Вы вошли как " + login + ".";
+    document.getElementById("logout-button").style.display = "block";
+});
+function vyjti() {
+    localStorage.removeItem("site-login");
+    document.getElementById("auth-message").textContent = "Вы вышли из аккаунта.";
+    document.getElementById("logout-button").style.display = "none";
+}
+</script>
+
+<script>
+var korzina = [];
+
+if (localStorage.getItem("korzina")) {
+    korzina = JSON.parse(localStorage.getItem("korzina"));
+}
+
+document.getElementById("cart-count").innerHTML = korzina.length;
+
+pokazat();
+
+function pokazat() {
+    var summa = 0;
+    var text = "";
+
+    if (korzina.length == 0) {
+        text = "<p>Корзина пуста</p>";
+    } else {
+        for (var i = 0; i < korzina.length; i++) {
+            text = text + "<div class='item'>";
+            text = text + "<span>" + korzina[i].nazvanie + " — " + korzina[i].tsena + " ₽</span>";
+            text = text + "<button onclick='udalit(" + i + ")'>✕</button>";
+            text = text + "</div>";
+            summa = summa + korzina[i].tsena;
+        }
+    }
+
+    document.getElementById("spisok-korziny").innerHTML = text;
+    document.getElementById("summa").innerHTML = summa;
+    document.getElementById("cart-count").innerHTML = korzina.length;
+}
+
+function udalit(index) {
+    korzina.splice(index, 1);
+    localStorage.setItem("korzina", JSON.stringify(korzina));
+    pokazat();
+}
+
+function ochistit() {
+    korzina = [];
+    localStorage.setItem("korzina", JSON.stringify(korzina));
+    pokazat();
+}
+</script>
+
+</body>
+</html>
